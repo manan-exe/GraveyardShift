@@ -2,8 +2,16 @@ using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class ZombieTypeA : MonoBehaviour
+public class ZombieOld : MonoBehaviour
+
+
 {
+    [Header("Attack")]
+    public float attackRange = 1.4f;
+    public float contactDamage = 10f;
+    public float attackCooldown = 0.5f;
+    private float nextAttackTime;
+
     [Header("Movement")]
     public float moveSpeed = 2f;
     public float stoppingDistance = 1.2f;
@@ -72,6 +80,17 @@ public class ZombieTypeA : MonoBehaviour
         // --- Final Movement ---
         Vector3 velocity = horizontalMove + Vector3.up * verticalVelocity;
         controller.Move(velocity * Time.deltaTime);
+
+        // --- Damage player if close enough ---
+        if (distance <= attackRange && Time.time >= nextAttackTime)
+        {
+            PlayerHealth hp = target.GetComponent<PlayerHealth>();
+            if (hp != null)
+            {
+                hp.TakeDamage(contactDamage);
+                nextAttackTime = Time.time + attackCooldown;
+            }
+        }
     }
 
     bool CheckGrounded() {
@@ -116,6 +135,20 @@ public class ZombieTypeA : MonoBehaviour
 
         yield return new WaitForSeconds(1.0f);
         Destroy(gameObject);
+    }
+    void OnTriggerStay(Collider other) {
+        if (isDead) return;
+        if (Time.time < nextAttackTime) return;
+
+        if (other.CompareTag("Player"))
+        {
+            PlayerHealth hp = other.GetComponent<PlayerHealth>();
+            if (hp != null)
+            {
+                hp.TakeDamage(contactDamage);
+                nextAttackTime = Time.time + attackCooldown;
+            }
+        }
     }
 
 }

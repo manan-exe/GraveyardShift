@@ -9,6 +9,7 @@ public class DialogueSystem : MonoBehaviour
 {
     public static DialogueSystem Instance;
 
+
     [Header("Global Toggle")]
     [Tooltip("Turn this off to skip ALL dialogue (useful while testing).")]
     public bool dialogueEnabled = true;
@@ -51,6 +52,10 @@ public class DialogueSystem : MonoBehaviour
     Coroutine typingRoutine;
     Action onDialogueComplete;
     bool isRunning;
+
+    public event Action IntroFinished;
+    public event Action WinFinished;
+    public event Action LoseFinished;
 
     void Awake() {
         // Simple singleton
@@ -295,20 +300,18 @@ public class DialogueSystem : MonoBehaviour
     // =========================
 
     void OnIntroComplete() {
-        // TODO: start your gameplay here
-        // e.g. enable player movement, start timer, etc.
         Debug.Log("Intro finished. Start gameplay.");
+        IntroFinished?.Invoke();
     }
 
     void OnWinComplete() {
-        // TODO: once you have a main menu scene, load it here.
-        // SceneManager.LoadScene("MainMenu");
         Debug.Log("Win dialogue finished. Go to main menu.");
+        WinFinished?.Invoke();
     }
 
     void OnLoseComplete() {
-        // TODO: once you have a main menu scene, load it here.
-        // SceneManager.LoadScene("MainMenu");
         Debug.Log("Lose dialogue finished. Go to main menu.");
+        LoseFinished?.Invoke();
     }
+
 }

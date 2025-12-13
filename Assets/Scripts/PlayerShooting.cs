@@ -14,6 +14,10 @@ public class PlayerShooting : MonoBehaviour
     public float maxShootDistance = 100f;
     public LayerMask hitMask;
 
+    [Header("Accuracy (Optional)")]
+    [Tooltip("0 = perfectly accurate. Small values like 0.5-1.5 feel more natural.")]
+    public float spreadDegrees = 0f;
+
     [Header("Muzzle Flash (Optional)")]
     public Light muzzleLight;
     public float muzzleFlashDuration = 0.05f;
@@ -30,16 +34,16 @@ public class PlayerShooting : MonoBehaviour
     public int shotsFired;
     public int shotsHit;
 
-    private float nextFireTime = 0f;
+    private float nextFireTime;
     private bool isAiming;
 
-    // --- NEW: tracking for muzzle flash coroutine ---
     private Coroutine muzzleFlashRoutine;
 
-    // --- NEW: reusable hit flash light & coroutine ---
     private GameObject hitFlashObject;
     private Light hitFlashLight;
     private Coroutine hitFlashRoutine;
+
+    private int vfxLayer = -1;
 
     void Start() {
         if (animator == null)
@@ -48,7 +52,8 @@ public class PlayerShooting : MonoBehaviour
         if (playerCamera == null)
             playerCamera = Camera.main;
 
-        // Keep flashes reasonably short vs fire rate
+        vfxLayer = LayerMask.NameToLayer("VFX"); // returns -1 if not found (safe)
+
         if (fireRate > 0f)
         {
             muzzleFlashDuration = Mathf.Min(muzzleFlashDuration, fireRate * 0.5f);
@@ -88,86 +93,97 @@ public class PlayerShooting : MonoBehaviour
         nextFireTime = Time.time + fireRate;
         shotsFired++;
 
-        // Animation
         if (animator != null)
             animator.SetTrigger("Shoot");
 
-        // --- MUZZLE FLASH LIGHT (no stacking) ---
+        PlayMuzzleFlash();
+
+        // Build ray
+        Vector3 origin = (muzzlePoint != null) ? muzzlePoint.position : playerCamera.transform.position;
+
+        Vector3 dir = playerCamera.transform.forward;
+        if (spreadDegrees > 0f)
+            dir = ApplySpread(dir, spreadDegrees);
+
+        Ray ray = new Ray(origin, dir);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, maxShootDistance, hitMask, QueryTriggerInteraction.Ignore))
+        {
+            shotsHit++;
+
+            DealDamage(hit.collider, damage);
+
+            if (hitImpactPrefab != null)
+            {
+                GameObject impact = Instantiate(hitImpactPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                if (vfxLayer != -1) SetLayerRecursively(impact, vfxLayer);
+            }
+
+            PlayHitFlash(hit.point);
+        }
+    }
+
+    void DealDamage(Collider col, float amount) {
+        // Preferred: your new shared zombie base class
+        ZombieAIBase ai = col.GetComponentInParent<ZombieAIBase>();
+        if (ai != null)
+        {
+            ai.TakeDamage(amount);
+            return;
+        }
+
+        // Fallback: your old zombies (so nothing breaks mid-transition)
+        ZombieOld oldA = col.GetComponentInParent<ZombieOld>();
+        if (oldA != null)
+        {
+            oldA.TakeDamage(amount);
+            return;
+        }
+
+        // If you still have ZombieTypeB as a separate script later, add here.
+        // ZombieTypeB oldB = col.GetComponentInParent<ZombieTypeB>();
+        // if (oldB != null) oldB.TakeDamage(amount);
+    }
+
+    void PlayMuzzleFlash() {
         if (muzzleLight != null)
         {
+            if (vfxLayer != -1) muzzleLight.gameObject.layer = vfxLayer;
+
             if (muzzleFlashRoutine != null)
                 StopCoroutine(muzzleFlashRoutine);
 
             muzzleFlashRoutine = StartCoroutine(MuzzleFlash());
         }
 
-        // --- MUZZLE FLASH PARTICLES (single non-looping burst) ---
         if (muzzleFlash != null)
         {
             muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             muzzleFlash.Play();
         }
-
-        // Raycast shot
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, maxShootDistance, hitMask))
-        {
-            shotsHit++;
-
-            // Damage ZombieTypeA
-            ZombieTypeA zombieA = hit.collider.GetComponentInParent<ZombieTypeA>();
-            if (zombieA != null)
-                zombieA.TakeDamage(damage);
-
-            // Damage ZombieTypeB
-            ZombieTypeB zombieB = hit.collider.GetComponentInParent<ZombieTypeB>();
-            if (zombieB != null)
-                zombieB.TakeDamage(damage);
-
-            // Spawn hit impact VFX (decals/particles)
-            if (hitImpactPrefab != null)
-            {
-                GameObject impact = Instantiate(hitImpactPrefab, hit.point, Quaternion.LookRotation(hit.normal));
-                SetLayerRecursively(impact, LayerMask.NameToLayer("VFX"));
-            }
-
-            // Reusable timed hit flash at impact
-            PlayHitFlash(hit.point);
-        }
     }
 
     IEnumerator MuzzleFlash() {
-        if (muzzleLight == null) yield break;
-
-        // Put muzzle flash on VFX layer so raycasts ignore it
-        muzzleLight.gameObject.layer = LayerMask.NameToLayer("VFX");
-
         muzzleLight.enabled = true;
         yield return new WaitForSeconds(muzzleFlashDuration);
         muzzleLight.enabled = false;
     }
 
-    // --- REUSABLE HIT FLASH LOGIC ---
-
     void PlayHitFlash(Vector3 position) {
-        if (playerCamera == null)
-            return;
+        if (playerCamera == null) return;
 
-        // Slightly pull the flash towards the camera so it doesn't clip into walls
         Vector3 fromCameraDir = (position - playerCamera.transform.position).normalized;
-        float offset = 0.15f;
-        Vector3 spawnPos = position - fromCameraDir * offset;
+        Vector3 spawnPos = position - fromCameraDir * 0.15f;
 
-        // Create the flash object once, then reuse it
         if (hitFlashObject == null)
         {
             hitFlashObject = new GameObject("HitFlash");
-            hitFlashObject.layer = LayerMask.NameToLayer("VFX");
+            if (vfxLayer != -1) hitFlashObject.layer = vfxLayer;
+
             hitFlashLight = hitFlashObject.AddComponent<Light>();
             hitFlashLight.type = LightType.Point;
             hitFlashLight.shadows = LightShadows.None;
+            hitFlashLight.enabled = false;
         }
 
         hitFlashObject.transform.position = spawnPos;
@@ -177,21 +193,26 @@ public class PlayerShooting : MonoBehaviour
         hitFlashLight.intensity = hitFlashIntensity;
         hitFlashLight.color = hitFlashColor;
 
-        // Restart the flash timer so it lines up with the current shot
         if (hitFlashRoutine != null)
             StopCoroutine(hitFlashRoutine);
+
         hitFlashRoutine = StartCoroutine(HitFlashRoutine());
     }
 
     IEnumerator HitFlashRoutine() {
-        if (hitFlashLight == null) yield break;
-
         hitFlashLight.enabled = true;
         yield return new WaitForSeconds(hitFlashDuration);
         hitFlashLight.enabled = false;
     }
 
-    // Utility: put hit effects & all children on VFX layer
+    Vector3 ApplySpread(Vector3 direction, float degrees) {
+        // Random small rotation around up/right for simple cone spread
+        float yaw = Random.Range(-degrees, degrees);
+        float pitch = Random.Range(-degrees, degrees);
+        Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
+        return rot * direction;
+    }
+
     void SetLayerRecursively(GameObject obj, int layer) {
         obj.layer = layer;
         foreach (Transform child in obj.transform)
