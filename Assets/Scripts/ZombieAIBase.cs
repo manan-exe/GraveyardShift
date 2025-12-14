@@ -28,7 +28,7 @@ public class ZombieAIBase : MonoBehaviour
 
     [Header("Hurt Stun")]
     public float hurtStunTime = 0.35f;
-    private float stunnedUntil;
+    protected float stunnedUntil;
 
     [Header("Stopping / Facing")]
     public float stopBuffer = 0.15f;          // extra space so they don't bump
@@ -37,6 +37,13 @@ public class ZombieAIBase : MonoBehaviour
     [Header("Attack Animation")]
     public string attackTrigger = "Attack";   // trigger on UpperBody layer
     public bool stopToAttack = true;          // freeze agent while attacking
+
+    [Header("Attack Timing")]
+    public float attackHitDelay = 0.25f;     // when damage is applied after trigger
+    protected bool isAttacking;
+
+    private PlayerHealth targetHealth;
+
 
     protected NavMeshAgent agent;
     protected float currentHealth;
@@ -49,15 +56,23 @@ public class ZombieAIBase : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         currentHealth = maxHealth;
 
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
-
         if (target == null)
         {
             var p = GameObject.FindGameObjectWithTag("Player");
             if (p) target = p.transform;
         }
+
+        if (target != null)
+        {
+            targetHealth = target.GetComponentInParent<PlayerHealth>();
+            if (targetHealth == null) targetHealth = target.GetComponentInChildren<PlayerHealth>();
+            if (targetHealth == null) targetHealth = target.GetComponent<PlayerHealth>();
+        }
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
     }
+
 
     protected virtual void Update() {
         if (isDead || target == null) return;
@@ -85,6 +100,13 @@ public class ZombieAIBase : MonoBehaviour
             if (animator != null) animator.SetFloat(speedParam, 0f);
             return;
         }
+        if (isAttacking)
+        {
+            agent.isStopped = true;
+            if (animator != null) animator.SetFloat(speedParam, 0f);
+            return;
+        }
+
 
         agent.isStopped = false;
 
@@ -121,35 +143,22 @@ public class ZombieAIBase : MonoBehaviour
 
 
     protected void TryDamagePlayer() {
-        if (Time.time < nextAttackTime) return;
+        if (isAttacking) return;                 // prevents spam
+        if (Time.time < nextAttackTime) return;  // cooldown gate
 
-        // XZ distance again
+        // XZ distance check
         Vector3 a = transform.position; a.y = 0f;
         Vector3 b = target.position; b.y = 0f;
         float dist = Vector3.Distance(a, b);
 
-        if (dist <= attackRange)
-        {
-            // stop and face before attacking
-            if (stopToAttack && AgentReady())
-            {
-                agent.isStopped = true;
-                agent.ResetPath();
-                FaceTarget();
-            }
+        if (dist > attackRange) return;
 
-            // play attack anim (UpperBody layer trigger)
-            if (animator != null && !string.IsNullOrEmpty(attackTrigger))
-                animator.SetTrigger(attackTrigger);
-
-            var hp = target.GetComponent<PlayerHealth>();
-            if (hp != null)
-            {
-                hp.TakeDamage(contactDamage);
-                nextAttackTime = Time.time + attackCooldown;
-            }
-        }
+        // Commit to attack NOW (cooldown starts even if damage later fails)
+        nextAttackTime = Time.time + attackCooldown;
+        StartCoroutine(AttackRoutine());
     }
+
+
 
     protected void UpdateAnimator() {
         if (animator == null) return;
@@ -204,7 +213,7 @@ public class ZombieAIBase : MonoBehaviour
         yield return new WaitForSeconds(corpseLifetime);
         Destroy(gameObject);
     }
-    bool AgentReady() {
+    protected bool AgentReady() {
         return agent != null && agent.enabled && agent.isOnNavMesh;
     }
     protected void FaceTarget() {
@@ -215,5 +224,43 @@ public class ZombieAIBase : MonoBehaviour
         Quaternion targetRot = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, faceTurnSpeed * Time.deltaTime);
     }
+    IEnumerator AttackRoutine() {
+        isAttacking = true;
+
+        // Stop + face while attacking
+        if (stopToAttack && AgentReady())
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        FaceTarget();
+
+        // Trigger attack animation once
+        if (animator != null && !string.IsNullOrEmpty(attackTrigger))
+        {
+            animator.ResetTrigger(attackTrigger);
+            animator.SetTrigger(attackTrigger);
+        }
+
+        // Wait until the "hit moment"
+        yield return new WaitForSeconds(attackHitDelay);
+
+        // Re-check range at hit moment (so stepping away avoids damage)
+        Vector3 a = transform.position; a.y = 0f;
+        Vector3 b = target.position; b.y = 0f;
+        float dist = Vector3.Distance(a, b);
+
+        if (dist <= attackRange && targetHealth != null)
+        {
+            targetHealth.TakeDamage(contactDamage);
+        }
+
+        // Small safety delay so we don't immediately re-trigger in the same frame
+        yield return null;
+
+        isAttacking = false;
+    }
+
 
 }
