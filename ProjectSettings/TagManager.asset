@@ -8,13 +8,13 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - PauseUI
   - Water
   - UI
   - Player
   - VFX
   - Ground
-  - 
+  - PauseUI2
   - 
   - 
   - 

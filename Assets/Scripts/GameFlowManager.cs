@@ -5,6 +5,7 @@ public class GameFlowManager : MonoBehaviour
 {
     public static GameFlowManager Instance;
     public static bool GameplayActive { get; private set; }
+    public static bool IsPaused { get; private set; }
 
 
     [Header("Scene Names")]
@@ -39,8 +40,9 @@ public class GameFlowManager : MonoBehaviour
         if (dialogueSystem != null)
         {
             dialogueSystem.IntroFinished += OnIntroFinished;
-            dialogueSystem.WinFinished += () => SceneManager.LoadScene(mainMenuSceneName);
-            dialogueSystem.LoseFinished += () => SceneManager.LoadScene(mainMenuSceneName);
+            dialogueSystem.WinFinished += () => { PrepareToLeaveGameplay(); SceneManager.LoadScene(mainMenuSceneName); };
+            dialogueSystem.LoseFinished += () => { PrepareToLeaveGameplay(); SceneManager.LoadScene(mainMenuSceneName); };
+
         }
         else
         {
@@ -69,6 +71,8 @@ public class GameFlowManager : MonoBehaviour
     public void TriggerWin() {
         if (gameEnded) return;
         gameEnded = true;
+        PrepareToLeaveGameplay();
+
 
         SetGameplayEnabled(false);
         GameplayActive = false;
@@ -81,6 +85,8 @@ public class GameFlowManager : MonoBehaviour
     public void TriggerLose() {
         if (gameEnded) return;
         gameEnded = true;
+        PrepareToLeaveGameplay();
+
 
         SetGameplayEnabled(false);
         GameplayActive = false;
@@ -102,19 +108,51 @@ public class GameFlowManager : MonoBehaviour
         if (gameEnded) return;
 
         paused = !paused;
+        IsPaused = paused;
 
         if (pausePanel != null)
             pausePanel.SetActive(paused);
 
         Time.timeScale = paused ? 0f : 1f;
 
-        // Optional: disable inputs while paused
         SetGameplayEnabled(!paused);
+
+        SetCursorPaused(paused);
     }
+
+
     public void SetGameplayEnabledPublic(bool enabled) {
         // call your existing SetGameplayEnabled
         // (or just copy the body)
         SetGameplayEnabled(enabled);
     }
+
+    void SetCursorPaused(bool isPaused) {
+        Cursor.visible = isPaused;
+        Cursor.lockState = isPaused ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+
+    // Call this anytime you are leaving gameplay (win/lose/menu)
+    void PrepareToLeaveGameplay() {
+        Time.timeScale = 1f;
+        paused = false;
+        IsPaused = false;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+
+    public void GoToMainMenu() {
+        if (gameEnded) return;
+
+        PrepareToLeaveGameplay();
+        SceneManager.LoadScene(mainMenuSceneName);
+    }
+
+
 
 }
