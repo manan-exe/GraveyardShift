@@ -50,6 +50,10 @@ public class ZombieAIBase : MonoBehaviour
     protected bool isDead;
     protected float nextAttackTime;
 
+    [Header("Audio")]
+    public AudioClip deathSfx;
+    [Range(0f, 1f)] public float deathSfxVolume = 1f;
+    public AudioSource sfxSource;
 
 
     protected virtual void Awake() {
@@ -191,6 +195,9 @@ public class ZombieAIBase : MonoBehaviour
     }
     IEnumerator DieRoutine() {
         isDead = true;
+
+        if (sfxSource != null && deathSfx != null)
+            sfxSource.PlayOneShot(deathSfx, deathSfxVolume);
 
         if (AgentReady())
         {

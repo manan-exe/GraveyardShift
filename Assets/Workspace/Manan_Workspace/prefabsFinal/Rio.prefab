@@ -171,6 +171,7 @@ GameObject:
   - component: {fileID: 1594626343675819578}
   - component: {fileID: 7693847743248911194}
   - component: {fileID: 2375090313469018380}
+  - component: {fileID: 5427355796636508913}
   m_Layer: 0
   m_Name: Rio
   m_TagString: Player
@@ -242,6 +243,10 @@ MonoBehaviour:
   killHorizontalDelay: 1.2
   killHorizontalDuration: 0.4
   animator: {fileID: 1002014076805186646}
+  movementAudioSource: {fileID: 5427355796636508913}
+  walkLoop: {fileID: 8300000, guid: be459f064689d894faa6390ee11081e6, type: 3}
+  runLoop: {fileID: 8300000, guid: f293e673d17c07241b371fb0ad591dc2, type: 3}
+  movementVolume: 0.418
 --- !u!114 &1594626343675819578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,6 +279,9 @@ MonoBehaviour:
   hitImpactPrefab: {fileID: 0}
   shotsFired: 0
   shotsHit: 0
+  gunAudioSource: {fileID: 0}
+  shootSfx: {fileID: 8300000, guid: 5bf99b9393613f344871fb04f01a99cb, type: 3}
+  shootVolume: 0.434
 --- !u!114 &7693847743248911194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,6 +308,8 @@ MonoBehaviour:
   hurtTriggerCooldown: 0.1
   dieTriggerName: Die
   deathDelay: 1.2
+  deathSfx: {fileID: 0}
+  deathSfxVolume: 1
 --- !u!136 &2375090313469018380
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -323,6 +333,102 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!82 &5427355796636508913
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595048950381550449}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 27
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &5220315999036033076
 PrefabInstance:
   m_ObjectHideFlags: 0

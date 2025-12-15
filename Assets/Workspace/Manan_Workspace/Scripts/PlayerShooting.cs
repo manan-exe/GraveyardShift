@@ -45,6 +45,11 @@ public class PlayerShooting : MonoBehaviour
 
     private int vfxLayer = -1;
 
+    [Header("Audio")]
+    public AudioSource gunAudioSource;
+    public AudioClip shootSfx;
+    [Range(0f, 1f)] public float shootVolume = 1f;
+
     void Start() {
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
@@ -95,6 +100,9 @@ public class PlayerShooting : MonoBehaviour
 
         if (animator != null)
             animator.SetTrigger("Shoot");
+
+        if (gunAudioSource != null && shootSfx != null)
+            gunAudioSource.PlayOneShot(shootSfx, shootVolume);
 
         PlayMuzzleFlash();
 

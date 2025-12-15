@@ -29,6 +29,10 @@ public class PlayerHealth : MonoBehaviour
 
     private float lastHurtTriggerTime = -999f;
 
+    [Header("Audio")]
+    public AudioClip deathSfx;
+    [Range(0f, 1f)] public float deathSfxVolume = 1f;
+
     void Awake() {
         currentHealth = maxHealth;
 
@@ -94,6 +98,10 @@ public class PlayerHealth : MonoBehaviour
     }
     IEnumerator DeathRoutine() {
         GameFlowManager.Instance.SetGameplayEnabledPublic(false);
+
+        if (deathSfx != null)
+            AudioSource.PlayClipAtPoint(deathSfx, transform.position, deathSfxVolume);
+
         // Disable gameplay input immediately so the player can’t move/shoot while dying
         if (GameFlowManager.Instance != null)
         {

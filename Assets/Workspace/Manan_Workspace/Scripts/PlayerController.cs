@@ -32,6 +32,12 @@ public class PlayerController : MonoBehaviour
     private Vector3 horizontalVelocity;
     private float verticalVelocity;
 
+    [Header("Audio - Movement")]
+    public AudioSource movementAudioSource;
+    public AudioClip walkLoop;
+    public AudioClip runLoop;
+    [Range(0f, 1f)] public float movementVolume = 1f;
+
     void Awake() {
         controller = GetComponent<CharacterController>();
 
@@ -70,6 +76,37 @@ public class PlayerController : MonoBehaviour
         // --- SPRINTING ---
         bool isSprinting = Input.GetKey(KeyCode.LeftShift) && hasInput;
         if (isAiming) isSprinting = false;
+
+        // --- MOVEMENT AUDIO ---
+        if (movementAudioSource != null)
+        {
+            // stop sound if not moving or gameplay inactive
+            if (!hasInput || !GameFlowManager.GameplayActive || GameFlowManager.IsPaused)
+            {
+                if (movementAudioSource.isPlaying)
+                    movementAudioSource.Stop();
+            }
+            else
+            {
+                AudioClip desiredClip = isSprinting ? runLoop : walkLoop;
+
+                if (desiredClip != null)
+                {
+                    movementAudioSource.loop = true;
+                    movementAudioSource.volume = movementVolume;
+
+                    if (movementAudioSource.clip != desiredClip)
+                    {
+                        movementAudioSource.clip = desiredClip;
+                        movementAudioSource.Play();
+                    }
+                    else if (!movementAudioSource.isPlaying)
+                    {
+                        movementAudioSource.Play();
+                    }
+                }
+            }
+        }
 
         float currentSpeed = moveSpeed * (isSprinting ? sprintMultiplier : 1f);
 
