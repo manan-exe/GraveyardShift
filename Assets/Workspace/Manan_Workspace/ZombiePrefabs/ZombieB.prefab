@@ -1853,7 +1853,7 @@ MonoBehaviour:
   lockOnRange: 1.6
   jumpFrequency: 2
   jumpFrequencyJitter: 2
-  jumpDistance: 4
+  jumpDistance: 6
   jumpSpeed: 8
   jumpBurstDuration: 0.35
   landingFreezeTime: 0.35
