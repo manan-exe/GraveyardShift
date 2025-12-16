@@ -308,8 +308,10 @@ MonoBehaviour:
   hurtTriggerCooldown: 0.1
   dieTriggerName: Die
   deathDelay: 1.2
-  deathSfx: {fileID: 0}
-  deathSfxVolume: 1
+  deathSfx: {fileID: 8300000, guid: 29a0269432dfa6446a8e5267afdea378, type: 3}
+  hurtSfx: {fileID: 8300000, guid: ac2170e9e8fad604f8b729667549bd3d, type: 3}
+  hurtVolume: 0.658
+  deathSfxVolume: 0.918
 --- !u!136 &2375090313469018380
 CapsuleCollider:
   m_ObjectHideFlags: 0

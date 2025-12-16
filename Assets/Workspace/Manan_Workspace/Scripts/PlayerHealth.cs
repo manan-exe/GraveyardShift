@@ -31,6 +31,8 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Audio")]
     public AudioClip deathSfx;
+    public AudioClip hurtSfx;
+    [Range(0f, 1f)] public float hurtVolume = 1f;
     [Range(0f, 1f)] public float deathSfxVolume = 1f;
 
     void Awake() {
@@ -50,10 +52,14 @@ public class PlayerHealth : MonoBehaviour
         if (currentHealth < 0f) currentHealth = 0f;
 
         // Only play hurt if health actually went down
-        if (currentHealth < oldHealth)
+        if (currentHealth < oldHealth){ 
             PlayHurtAnimation();
 
-        UpdateHealthUI();
+            if (hurtSfx != null)
+           AudioSource.PlayClipAtPoint(hurtSfx, transform.position, hurtVolume);
+            }
+
+         UpdateHealthUI();
 
         if (currentHealth <= 0f && !isDead)
         {

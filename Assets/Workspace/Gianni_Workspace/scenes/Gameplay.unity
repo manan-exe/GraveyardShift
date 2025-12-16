@@ -969,6 +969,10 @@ PrefabInstance:
       value: GameFlowManager
       objectReference: {fileID: 0}
     - target: {fileID: 8781655157069155299, guid: 704000950cc96dd4abf5217aba2dd730, type: 3}
+      propertyPath: winSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 2fbc4903453fb354c91ce855ad2ca463, type: 3}
+    - target: {fileID: 8781655157069155299, guid: 704000950cc96dd4abf5217aba2dd730, type: 3}
       propertyPath: gameTimer
       value: 
       objectReference: {fileID: 2102834839}

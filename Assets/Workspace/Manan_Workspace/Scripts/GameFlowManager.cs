@@ -25,6 +25,10 @@ public class GameFlowManager : MonoBehaviour
     private bool paused;
     private bool gameEnded;
 
+    [Header("Audio - Endings")]
+    public AudioClip winSfx;
+    [Range(0f, 1f)] public float winVolume = 1f;
+
     void Awake() {
         Instance = this;
     }
@@ -69,6 +73,10 @@ public class GameFlowManager : MonoBehaviour
     }
 
     public void TriggerWin() {
+
+        if (winSfx != null)
+            AudioSource.PlayClipAtPoint(winSfx, Camera.main.transform.position, winVolume);
+                
         if (gameEnded) return;
         gameEnded = true;
         PrepareToLeaveGameplay();
