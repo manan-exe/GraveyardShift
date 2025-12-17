@@ -1021,7 +1021,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1f4ed04a6d756684fb0898f05506fe03, type: 3}
   minDelay: 3
   maxDelay: 9
-  playChance: 0.8
+  playChance: 0.35
   volume: 0.8
   pitchMin: 0.95
   pitchMax: 1.08
