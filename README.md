@@ -3,8 +3,11 @@ Graveyard Shift
 
 # Group Members:
 - Manan Shukla
+  - Github Username: **manan-exe**
 - Mason Wilkins
+  - Github Username: **Masonwilkins6** 
 - Gianni McGovern
+  - Github Username: **gvrnr**
 
 # Instructions to run:
 - Go to Assets -> Workspace -> Mason_Workspace -> Menu -> ActualMainMenu
